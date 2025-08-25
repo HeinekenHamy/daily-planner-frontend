@@ -37,4 +37,3 @@ if (typeof window !== 'undefined') {
     // You'll implement token validation later
     useAuthStore.setState({ token, isAuthenticated: true })
   }
-}

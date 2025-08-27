@@ -4,23 +4,48 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { registerUser } from '@/lib/api'
+import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/lib/auth'
 
 export default function RegisterPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
     
-    if (password !== passwordConfirmation) {
-      alert('Passwords do not match!')
+    if (!email || !password || !passwordConfirmation) {
+      setError('Please fill in all fields')
       return
     }
     
-    // TODO: Implement registration functionality
-    console.log('Registration attempt:', { email, password })
-    alert('Registration functionality coming soon!')
+    if (password !== passwordConfirmation) {
+      setError('Passwords do not match!')
+      return
+    }
+    
+    setIsSubmitting(true)
+    
+    try {
+      const response = await registerUser(email, password, passwordConfirmation)
+      
+      useAuthStore.getState().login(response.token, response.user)
+      
+      router.push('/dashboard')
+      
+    } catch (error: any) { 
+      console.error('Registration error:', error)
+      setError(error.message || 'Registration failed. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -30,6 +55,12 @@ export default function RegisterPage() {
           <h1 className="text-2xl font-bold">Create Account</h1>
           <p className="text-muted-foreground mt-2">Sign up for a new account</p>
         </div>
+
+        {error && (
+          <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-md text-sm">
+            {error}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
@@ -68,8 +99,8 @@ export default function RegisterPage() {
             />
           </div>
           
-          <Button type="submit" className="w-full">
-            Create Account
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Creating Account...' : 'Create Account'}
           </Button>
         </form>
         

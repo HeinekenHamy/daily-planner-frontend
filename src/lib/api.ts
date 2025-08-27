@@ -1,3 +1,5 @@
+import { AuthResponse } from '@/types/auth'
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
 
 export async function apiRequest<T>(
@@ -40,5 +42,23 @@ export async function authenticatedRequest<T>(
       ...options.headers,
       'Authorization': `Bearer ${token}`,
     },
+  })
+}
+
+export async function loginUser(email: string, password: string) {
+  return apiRequest<AuthResponse>('/login', {
+    method: 'POST',
+    body: JSON.stringify({
+      auth: { email, password }
+    }),
+  })
+}
+
+export async function registerUser(email: string, password: string, passwordConfirmation: string) {
+  return apiRequest<AuthResponse>('/register', {
+    method: 'POST',
+    body: JSON.stringify({
+      auth: { email, password, password_confirmation: passwordConfirmation }
+    }),
   })
 }

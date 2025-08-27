@@ -4,17 +4,43 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { loginUser } from '@/lib/api'
+import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/lib/auth'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement login functionality
-    console.log('Login attempt:', { email, password })
-    alert('Login functionality coming soon!')
+    setError('')
+    
+    if (!email || !password) {
+      setError('Please fill in all fields')
+      return
+    }
+    
+    setIsSubmitting(true)
+    
+    try {
+      const response = await loginUser(email, password)
+      
+      useAuthStore.getState().login(response.token, response.user)
+      
+      router.push('/dashboard')
+      
+    } catch (error: any) {
+      console.error('Login error:', error)
+      setError(error.message || 'Login failed. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
@@ -23,6 +49,12 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold">Welcome Back</h1>
           <p className="text-muted-foreground mt-2">Sign in to your account</p>
         </div>
+
+        {error && (
+          <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-md text-sm">
+            {error}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
@@ -49,8 +81,8 @@ export default function LoginPage() {
             />
           </div>
           
-          <Button type="submit" className="w-full">
-            Sign In
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing In...' : 'Sign In'}
           </Button>
         </form>
         

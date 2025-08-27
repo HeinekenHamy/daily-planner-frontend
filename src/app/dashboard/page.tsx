@@ -1,10 +1,22 @@
 'use client'
 
+import { useState } from 'react'
 import { ProtectedLayout } from '@/components/layout/protected-layout'
 import { useAuthStore } from '@/lib/auth'
+import { MonthlyCalendar } from '@/components/calendar/monthly-calendar'
+import { DailyAgenda } from '@/components/calendar/daily-agenda'
 
 export default function DashboardPage() {
   const { user } = useAuthStore()
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [isAgendaOpen, setIsAgendaOpen] = useState(false)
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date)
+      setIsAgendaOpen(true)
+    }
+  }
 
   return (
     <ProtectedLayout>
@@ -16,29 +28,34 @@ export default function DashboardPage() {
           </p>
         </div>
         
-        <div className="bg-muted/50 rounded-lg p-8 text-center">
-          <h2 className="text-xl font-semibold mb-2">Calendar Coming Soon</h2>
-          <p className="text-muted-foreground">
-            The monthly calendar view will be displayed here. You'll be able to see all your events and click on dates to view daily agendas.
-          </p>
+        {/* Calendar Component */}
+        <div className="max-w-4xl mx-auto">
+          <MonthlyCalendar onDateSelect={handleDateSelect} />
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-muted/50 rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-2">Quick Actions</h3>
+        {/* Selected Date Info */}
+        {selectedDate && (
+          <div className="text-center">
             <p className="text-muted-foreground">
-              Create new events, view upcoming tasks, and manage your schedule.
+              Selected: {selectedDate.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Daily agenda modal coming in the next step!
             </p>
           </div>
-          
-          <div className="bg-muted/50 rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-2">Recent Events</h3>
-            <p className="text-muted-foreground">
-              Your most recent events and upcoming deadlines will appear here.
-            </p>
-          </div>
-        </div>
+        )}
       </div>
+
+      <DailyAgenda
+        isOpen={isAgendaOpen}
+        onClose={() => setIsAgendaOpen(false)}
+        selectedDate={selectedDate}
+      />
     </ProtectedLayout>
   )
 }

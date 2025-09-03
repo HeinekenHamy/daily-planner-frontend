@@ -1,0 +1,227 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import { useRouter, useParams } from 'next/navigation'
+import { ProtectedLayout } from '@/components/layout/protected-layout'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
+import { useEvents } from '@/lib/useEvents'
+import { CreateEventData, Event } from '@/types/event'
+import { extractTimeForInput } from '@/lib/utils'
+
+interface EditEventPageProps {
+  params: Promise<{ id: string }>
+}
+
+export default function EditEventPage({ params }: EditEventPageProps) {
+  const router = useRouter()
+  const { id } = React.use(params)
+  const { events, editEvent } = useEvents()
+  
+  const [formData, setFormData] = useState<CreateEventData>({
+    title: '',
+    description: '',
+    date: '',
+    time: '',
+    category: 'Personal',
+    priority: 'Medium'
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  // Load existing event data
+  useEffect(() => {
+    const loadEvent = async () => {
+      try {
+        const event = events.find(e => e.id === parseInt(id))
+        if (event) {
+          setFormData({
+            title: event.title,
+            description: event.description || '',
+            date: event.date,
+            time: event.time ? extractTimeForInput(event.time) : '',
+            category: event.category,
+            priority: event.priority
+          })
+        } else {
+          setError('Event not found')
+        }
+      } catch (err) {
+        setError('Failed to load event')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (events.length > 0) {
+      loadEvent()
+    } else {
+      setIsLoading(false)
+    }
+  }, [id, events])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    
+    if (!formData.title || !formData.date) {
+      setError('Title and date are required')
+      return
+    }
+    
+    // Add debug logging
+    console.log('=== DEBUG: Event Update ===')
+    console.log('Event ID:', id)
+    console.log('Form data being sent:', formData)
+    console.log('Data structure for API:', { event: formData })
+    
+    setIsSubmitting(true)
+    
+    try {
+      await editEvent(parseInt(id), formData)
+      router.push('/dashboard')
+    } catch (err: any) {
+      console.error('=== DEBUG: Error occurred ===')
+      console.error('Error details:', err)
+      setError(err.message || 'Failed to update event')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleInputChange = (field: keyof CreateEventData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  return (
+    <ProtectedLayout>
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </Link>
+        </div>
+        
+        <div className="text-center">
+          <h1 className="text-3xl font-bold">Edit Event</h1>
+          <p className="text-muted-foreground mt-2">
+            Update your event details
+          </p>
+        </div>
+        
+        <div className="max-w-2xl mx-auto">
+          {isLoading ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Loading event...</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                type="text"
+                placeholder="Enter event title"
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Enter event description (optional)"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                rows={3}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="date">Date *</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => handleInputChange('date', e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="time">Time</Label>
+                <Input
+                  id="time"
+                  type="time"
+                  value={formData.time}
+                  onChange={(e) => handleInputChange('time', e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Work">Work</SelectItem>
+                    <SelectItem value="Personal">Personal</SelectItem>
+                    <SelectItem value="Health">Health</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="priority">Priority</Label>
+                <Select value={formData.priority} onValueChange={(value) => handleInputChange('priority', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="flex gap-4 pt-4">
+              <Button type="submit" disabled={isSubmitting} className="flex-1">
+                {isSubmitting ? 'Updating Event...' : 'Update Event'}
+              </Button>
+              <Link href="/dashboard" className="flex-1">
+                <Button type="button" variant="outline" className="w-full">
+                  Cancel
+                </Button>
+              </Link>
+            </div>
+          </form>
+          )}
+        </div>
+      </div>
+    </ProtectedLayout>
+  )
+}

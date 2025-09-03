@@ -4,13 +4,18 @@ import { useState } from 'react'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Event } from '@/types/event'
 
 interface MonthlyCalendarProps {
   onDateSelect: (date: Date) => void
+  events: Event[]
 }
 
-export function MonthlyCalendar({ onDateSelect }: MonthlyCalendarProps) {
+export function MonthlyCalendar({ onDateSelect, events }: MonthlyCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
+  
+  // Debug logging
+  console.log('MonthlyCalendar received events:', events)
 
   const goToPreviousMonth = () => {
     setCurrentMonth(prev => {
@@ -79,6 +84,16 @@ export function MonthlyCalendar({ onDateSelect }: MonthlyCalendarProps) {
           month={currentMonth}
           onMonthChange={setCurrentMonth}
           className="w-full"
+          modifiers={{
+            hasEvents: (date) => {
+              const dateString = date.toISOString().split('T')[0]
+              const dayEvents = events.filter(event => event.date === dateString)
+              return dayEvents.length > 0
+            }
+          }}
+          modifiersClassNames={{
+            hasEvents: "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-primary after:rounded-full"
+          }}
         />
       </div>
     </div>

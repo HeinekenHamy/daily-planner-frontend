@@ -75,20 +75,12 @@ export default function EditEventPage({ params }: EditEventPageProps) {
       return
     }
     
-    // Add debug logging
-    console.log('=== DEBUG: Event Update ===')
-    console.log('Event ID:', id)
-    console.log('Form data being sent:', formData)
-    console.log('Data structure for API:', { event: formData })
-    
     setIsSubmitting(true)
     
     try {
       await editEvent(parseInt(id), formData)
       router.push('/dashboard')
     } catch (err: any) {
-      console.error('=== DEBUG: Error occurred ===')
-      console.error('Error details:', err)
       setError(err.message || 'Failed to update event')
     } finally {
       setIsSubmitting(false)

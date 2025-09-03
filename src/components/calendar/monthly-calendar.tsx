@@ -13,9 +13,6 @@ interface MonthlyCalendarProps {
 
 export function MonthlyCalendar({ onDateSelect, events }: MonthlyCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
-  
-  // Debug logging
-  console.log('MonthlyCalendar received events:', events)
 
   const goToPreviousMonth = () => {
     setCurrentMonth(prev => {

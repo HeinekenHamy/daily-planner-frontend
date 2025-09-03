@@ -18,44 +18,24 @@ export async function apiRequest<T>(
     ...options,
   }
 
-  // Add debug logging for all requests
-  console.log('=== DEBUG: API Request Details ===')
-  console.log('URL:', url)
-  console.log('Method:', config.method || 'GET')
-  console.log('Headers:', config.headers)
-  console.log('Content-Type specifically:', config.headers?.['Content-Type'])
-  console.log('Body:', config.body)
-  console.log('Body type:', typeof config.body)
-
   try {
     const response = await fetch(url, config)
     
-    console.log('=== DEBUG: API Response ===')
-    console.log('Status:', response.status)
-    console.log('Status Text:', response.statusText)
-    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      console.log('=== DEBUG: Error Response ===')
-      console.log('Error data:', errorData)
       throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
     }
 
     const contentType = response.headers.get('content-type')
     if (contentType && contentType.includes('application/json')) {
       const result = await response.json()
-      console.log('=== DEBUG: Success Response ===')
-      console.log('Response data:', result)
       return result
     } else {
-      console.log('=== DEBUG: Success Response (No Content) ===')
-      console.log('Status:', response.status, 'No JSON content')
       return null as any
     }
 
   } catch (error) {
-    console.error('=== DEBUG: API Request Failed ===')
-    console.error('Error:', error)
+    console.error('API Request Failed:', error)
     throw error
   }
 }
@@ -65,12 +45,6 @@ export async function authenticatedRequest<T>(
   token: string,
   options: RequestInit = {}
 ): Promise<T> {
-  console.log('🔐 authenticatedRequest called!')
-  console.log('📍 endpoint:', endpoint)
-  console.log('🎫 token:', token ? 'Present' : 'Missing')
-  console.log('⚙️ options:', options)
-  console.log('📦 body:', options.body)
-  
   return apiRequest<T>(endpoint, {
     ...options,
     headers: {
@@ -121,21 +95,12 @@ export async function getEventsByDate(token: string, date: string) {
 }
 
 export async function createEvent(token: string, eventData: CreateEventData) {
-  console.log('🚀 createEvent called!')
-  console.log('📝 eventData:', eventData)
-  
-  const requestBody = { event: eventData }
-  console.log('📦 requestBody:', requestBody)
-  
-  const jsonBody = JSON.stringify(requestBody)
-  console.log('📄 jsonBody:', jsonBody)
-  
   return authenticatedRequest<Event>('/events', token, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: jsonBody,
+    body: JSON.stringify({ event: eventData }),
   })
 }
 

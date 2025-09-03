@@ -20,7 +20,6 @@ export default function DashboardPage() {
 
       const dateString = date.toISOString().split('T')[0]
       const dayEvents = events.filter(event => event.date === dateString)
-      console.log('Events for', dateString, ':', dayEvents)
     }
   }
 
@@ -28,7 +27,7 @@ export default function DashboardPage() {
     <ProtectedLayout>
       <div className="space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">Welcome to Daily Planner</h1>
+          <h1 className="text-3xl font-bold">Welcome to the Daily Planner</h1>
           <p className="text-muted-foreground mt-2">
             Hello, {user?.email}! Here's your calendar for this month.
           </p>
@@ -51,23 +50,6 @@ export default function DashboardPage() {
         <div className="max-w-4xl mx-auto">
           <MonthlyCalendar onDateSelect={handleDateSelect} events={events} />
         </div>
-        
-        {/* Selected Date Info */}
-        {selectedDate && (
-          <div className="text-center">
-            <p className="text-muted-foreground">
-              Selected: {selectedDate.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Daily agenda modal coming in the next step!
-            </p>
-          </div>
-        )}
       </div>
 
       <DailyAgenda

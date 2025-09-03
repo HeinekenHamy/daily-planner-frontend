@@ -46,19 +46,12 @@ export default function CreateEventPage() {
       return
     }
     
-    // Add debug logging
-    console.log('=== DEBUG: Event Creation ===')
-    console.log('Form data being sent:', formData)
-    console.log('Data structure for API:', { event: formData })
-    
     setIsSubmitting(true)
     
     try {
       await addEvent(formData)
       router.push('/dashboard')
     } catch (err: any) {
-      console.error('=== DEBUG: Error occurred ===')
-      console.error('Error details:', err)
       setError(err.message || 'Failed to create event')
     } finally {
       setIsSubmitting(false)
